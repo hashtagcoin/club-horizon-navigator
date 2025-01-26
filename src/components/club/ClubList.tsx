@@ -1,7 +1,8 @@
-import { FC, useEffect, useRef, useCallback, useMemo } from 'react';
+import { FC, useEffect, useRef } from 'react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ClubCard } from '@/components/ClubCard';
 import { ClubFilters } from '@/components/ClubFilters';
 import { Club } from '@/types/club';
-import { VirtualizedClubList } from './VirtualizedClubList';
 
 interface ClubListProps {
   clubs: Club[];
@@ -34,47 +35,89 @@ export const ClubList: FC<ClubListProps> = ({
   newMessageCounts,
   isLoading
 }) => {
-  const genres = useMemo(() => 
-    Array.from(new Set(clubs.map(club => club.genre))).sort(),
-    [clubs]
-  );
+  const genres = Array.from(new Set(clubs.map(club => club.genre))).sort();
+  const selectedClubRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedClub && selectedClubRef.current && scrollAreaRef.current) {
+      // Add a small delay to ensure the DOM has updated
+      setTimeout(() => {
+        const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (!scrollContainer) return;
+
+        const clubElement = selectedClubRef.current;
+        if (!clubElement) return;
+
+        const cardHeight = clubElement.offsetHeight;
+        const scrollTop = Math.max(0, clubElement.offsetTop - cardHeight);
+        
+        scrollContainer.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [selectedClub]);
+
+  // Reset scroll position when club list changes
+  useEffect(() => {
+    const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [clubs]);
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-white shadow-lg">
-      <div className="sr-only">
-        <div className="flex-shrink-0 justify-between items-center px-4 py-2 bg-gray-50">
-          <div className="flex items-center gap-2">
-            <div className="bg-black text-white px-4 py-1.5 rounded-lg text-xl font-bold">
-              {clubs.length}
-            </div>
-            <span className="text-sm font-medium text-gray-600">
-              {clubs.length === 1 ? 'Venue' : 'Venues'}
-            </span>
+    <div className="w-full h-full flex flex-col p-1 overflow-hidden bg-white shadow-lg">
+      <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
+        <div className="flex items-center gap-2">
+          <div className="bg-black text-white px-4 py-1.5 rounded-lg text-xl font-bold">
+            {clubs.length}
           </div>
-        </div>
-        <div className="flex-shrink-0">
-          <ClubFilters
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            filterGenre={filterGenre}
-            setFilterGenre={setFilterGenre}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            genres={genres}
-          />
+          <span className="text-sm font-medium text-gray-600">
+            {clubs.length === 1 ? 'Venue' : 'Venues'}
+          </span>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <VirtualizedClubList
-          clubs={clubs}
-          selectedClub={selectedClub}
-          selectedDay={selectedDay}
-          onSelectClub={onSelectClub}
-          onOpenChat={onOpenChat}
-          newMessageCounts={newMessageCounts}
-          isLoading={isLoading}
-        />
-      </div>
+      <ClubFilters
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterGenre={filterGenre}
+        setFilterGenre={setFilterGenre}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        genres={genres}
+      />
+      <ScrollArea 
+        className="flex-grow" 
+        ref={scrollAreaRef}
+      >
+        <div className="space-y-2 pr-2">
+          {isLoading ? (
+            <div>Loading venues...</div>
+          ) : (
+            clubs.map(club => (
+              <div 
+                key={club.id} 
+                ref={selectedClub?.id === club.id ? selectedClubRef : null}
+              >
+                <ClubCard
+                  club={club}
+                  selectedDay={selectedDay}
+                  isSelected={selectedClub?.id === club.id}
+                  onSelect={onSelectClub}
+                  onOpenChat={onOpenChat}
+                  newMessageCount={newMessageCounts[club.id] || 0}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

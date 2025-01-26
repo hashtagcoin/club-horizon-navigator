@@ -2,7 +2,6 @@ import { Club } from '@/types/club';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music, Clock, MessageCircle, User, Smile, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { memo } from 'react';
 
 interface ClubCardProps {
   club: Club;
@@ -13,15 +12,7 @@ interface ClubCardProps {
   newMessageCount: number;
 }
 
-const formatType = (type: string) => {
-  return type
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-export const ClubCard = memo(({
+export const ClubCard = ({
   club,
   selectedDay,
   isSelected,
@@ -29,9 +20,18 @@ export const ClubCard = memo(({
   onOpenChat,
   newMessageCount
 }: ClubCardProps) => {
+  // Function to format type string
+  const formatType = (type: string) => {
+    return type
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <Card
-      className={`cursor-pointer relative bg-white transition-none ${isSelected ? 'selected-club-card' : ''}`}
+      className={`cursor-pointer relative bg-white ${isSelected ? 'selected-club-card' : ''}`}
       onClick={() => onSelect(club)}
     >
       <CardHeader className="flex justify-between items-start p-2">
@@ -80,20 +80,4 @@ export const ClubCard = memo(({
       </CardContent>
     </Card>
   );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.club.id === nextProps.club.id &&
-    prevProps.club.name === nextProps.club.name &&
-    prevProps.club.traffic === nextProps.club.traffic &&
-    prevProps.club.hasSpecial === nextProps.club.hasSpecial &&
-    prevProps.club.isUserAdded === nextProps.club.isUserAdded &&
-    prevProps.club.genre === nextProps.club.genre &&
-    prevProps.club.openingHours[prevProps.selectedDay] === nextProps.club.openingHours[nextProps.selectedDay] &&
-    prevProps.club.usersAtClub === nextProps.club.usersAtClub &&
-    prevProps.selectedDay === nextProps.selectedDay &&
-    prevProps.isSelected === nextProps.isSelected &&
-    prevProps.newMessageCount === nextProps.newMessageCount
-  );
-});
-
-ClubCard.displayName = 'ClubCard';
+};
