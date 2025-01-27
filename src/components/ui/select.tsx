@@ -79,7 +79,7 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
-      onOpenAutoFocus={(event) => {
+      onCloseAutoFocus={(event) => {
         event.preventDefault()
         event.currentTarget.focus({ preventScroll: true })
       }}
