@@ -10,7 +10,6 @@ import { MainLayout } from './layout/MainLayout';
 import { MapSection } from './map/MapSection';
 import { ChatWindow } from './chat/ChatWindow';
 import { useToast } from "@/hooks/use-toast";
-import { ClubList } from './club/ClubList';
 
 const libraries: Libraries = ['places', 'geometry'];
 
@@ -107,28 +106,6 @@ export default function ClubPilot() {
       toggleGeneralChat={chatManager.toggleGeneralChat}
       onVenueAdded={handleVenueAdded}
     >
-      <div className="w-1/2 h-full bg-white shadow-xl">
-        <ClubList
-          clubs={filteredClubs}
-          selectedClub={mapControls.selectedClub}
-          selectedDay={selectedDay}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          filterGenre={filterGenre}
-          setFilterGenre={setFilterGenre}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onSelectClub={(club) => {
-            mapControls.handleClubSelect(club);
-            locationManagement.setMapCenter(club.position);
-            locationManagement.setMapZoom(16);
-          }}
-          onOpenChat={chatManager.openChat}
-          newMessageCounts={chatManager.newMessageCounts}
-          isLoading={isLoadingClubs}
-        />
-      </div>
-
       <MapSection
         isListCollapsed={false}
         isLoaded={isLoaded}
