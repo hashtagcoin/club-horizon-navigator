@@ -43,7 +43,11 @@ export function LocationControls({
         .select('city')
         .not('city', 'is', null)
       
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching suburbs:', error)
+        toast.error("Failed to load suburbs")
+        return
+      }
 
       const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
       setSuburbs(uniqueSuburbs)
@@ -80,7 +84,9 @@ export function LocationControls({
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyC6Z3hNhhdT0Fqy_AXYl07JBRczMiTg8_0`
       )
       
-      if (!response.ok) throw new Error('Failed to fetch location details')
+      if (!response.ok) {
+        throw new Error('Failed to fetch location details')
+      }
       
       const data = await response.json()
       
@@ -108,11 +114,14 @@ export function LocationControls({
         } else {
           throw new Error("Couldn't determine your exact location")
         }
+      } else {
+        throw new Error("No location data found")
       }
     } catch (error) {
       console.error('Error getting location:', error)
-      setLocationError(error instanceof Error ? error.message : 'Error accessing your location')
-      toast.error(locationError || "Error determining your location")
+      const errorMessage = error instanceof Error ? error.message : 'Error accessing your location'
+      setLocationError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoadingLocation(false)
     }
