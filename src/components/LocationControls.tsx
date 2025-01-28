@@ -17,6 +17,12 @@ interface LocationControlsProps {
   onSuburbChange: (value: string) => void
 }
 
+const DEFAULT_LOCATION = {
+  country: "Australia",
+  state: "New South Wales",
+  suburb: "Sydney"
+};
+
 export function LocationControls({
   currentCountry,
   currentState,
@@ -35,6 +41,14 @@ export function LocationControls({
   useEffect(() => {
     fetchSuburbs()
   }, [])
+
+  const setDefaultLocation = async () => {
+    onCountryChange(DEFAULT_LOCATION.country)
+    onStateChange(DEFAULT_LOCATION.state)
+    onSuburbChange(DEFAULT_LOCATION.suburb)
+    await fetchCity(DEFAULT_LOCATION.suburb)
+    toast.success(`Location set to ${DEFAULT_LOCATION.suburb}`)
+  }
 
   const fetchSuburbs = async () => {
     try {
@@ -58,6 +72,7 @@ export function LocationControls({
     } catch (error) {
       console.error('Error fetching suburbs:', error)
       toast.error("Failed to load suburbs")
+      await setDefaultLocation()
     }
   }
 
@@ -68,6 +83,7 @@ export function LocationControls({
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
       setIsLoadingLocation(false)
+      await setDefaultLocation()
       return
     }
 
@@ -122,6 +138,7 @@ export function LocationControls({
       const errorMessage = error instanceof Error ? error.message : 'Error accessing your location'
       setLocationError(errorMessage)
       toast.error(errorMessage)
+      await setDefaultLocation()
     } finally {
       setIsLoadingLocation(false)
     }
