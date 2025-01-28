@@ -6,6 +6,7 @@ import { locations } from '@/data/locations'
 import { useState, useEffect } from 'react'
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
+import { useCurrentCity } from '@/hooks/useCurrentCity'
 
 interface LocationControlsProps {
   currentCountry: string
@@ -28,33 +29,28 @@ export function LocationControls({
   const [showGlobalLocationModal, setShowGlobalLocationModal] = useState(false)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [suburbs, setSuburbs] = useState<string[]>([])
+  const { fetchCity } = useCurrentCity()
 
   useEffect(() => {
     fetchSuburbs()
   }, [])
 
   const fetchSuburbs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('Clublist_Australia')
-        .select('city')
-        .not('city', 'is', null)
-      
-      if (error) {
-        console.error('Error fetching suburbs:', error)
-        return
-      }
+    const { data, error } = await supabase
+      .from('Clublist_Australia')
+      .select('city')
+      .not('city', 'is', null)
+    
+    if (error) {
+      console.error('Error fetching suburbs:', error)
+      return
+    }
 
-      // Extract unique suburbs and remove nulls
-      const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
-      setSuburbs(uniqueSuburbs)
-      
-      // If no suburb is selected and we have suburbs, select the first one
-      if (!currentSuburb && uniqueSuburbs.length > 0) {
-        onSuburbChange(uniqueSuburbs[0])
-      }
-    } catch (error) {
-      console.error('Error processing suburbs:', error)
+    const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
+    setSuburbs(uniqueSuburbs)
+    
+    if (!currentSuburb && uniqueSuburbs.length > 0) {
+      onSuburbChange(uniqueSuburbs[0])
     }
   }
 
@@ -75,7 +71,6 @@ export function LocationControls({
           const data = await response.json()
           
           if (data.results && data.results.length > 0) {
-            // Find the suburb from address components
             const addressComponents = data.results[0].address_components
             let suburb = '', state = '', country = ''
             
@@ -89,11 +84,11 @@ export function LocationControls({
               }
             }
 
-            // Update location if we found valid data
             if (suburb && state && country) {
               onCountryChange(country)
               onStateChange(state)
               onSuburbChange(suburb)
+              fetchCity(suburb)
               toast.success(`Location updated to ${suburb}`)
             } else {
               toast.error("Couldn't determine your exact location")
@@ -140,7 +135,10 @@ export function LocationControls({
             <DialogTitle>Select Suburb</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Select value={currentSuburb} onValueChange={onSuburbChange}>
+            <Select value={currentSuburb} onValueChange={(value) => {
+              onSuburbChange(value)
+              fetchCity(value)
+            }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select suburb" />
               </SelectTrigger>
@@ -197,7 +195,10 @@ export function LocationControls({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={currentSuburb} onValueChange={onSuburbChange}>
+            <Select value={currentSuburb} onValueChange={(value) => {
+              onSuburbChange(value)
+              fetchCity(value)
+            }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select suburb" />
               </SelectTrigger>

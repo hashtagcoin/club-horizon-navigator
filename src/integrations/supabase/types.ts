@@ -924,6 +924,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dfsdfs: {
+        Row: {
+          City: string | null
+          Country: string | null
+          ID: number
+          Latitude: number | null
+          Longitude: number | null
+          State: string | null
+        }
+        Insert: {
+          City?: string | null
+          Country?: string | null
+          ID: number
+          Latitude?: number | null
+          Longitude?: number | null
+          State?: string | null
+        }
+        Update: {
+          City?: string | null
+          Country?: string | null
+          ID?: number
+          Latitude?: number | null
+          Longitude?: number | null
+          State?: string | null
+        }
+        Relationships: []
+      }
       friends: {
         Row: {
           created_at: string | null
@@ -1074,6 +1101,33 @@ export type Database = {
           loged_in?: boolean | null
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      SupportedCountries: {
+        Row: {
+          City: string | null
+          Country: string | null
+          ID: number
+          Latitude: number | null
+          Longitude: number | null
+          State: string | null
+        }
+        Insert: {
+          City?: string | null
+          Country?: string | null
+          ID: number
+          Latitude?: number | null
+          Longitude?: number | null
+          State?: string | null
+        }
+        Update: {
+          City?: string | null
+          Country?: string | null
+          ID?: number
+          Latitude?: number | null
+          Longitude?: number | null
+          State?: string | null
         }
         Relationships: []
       }
