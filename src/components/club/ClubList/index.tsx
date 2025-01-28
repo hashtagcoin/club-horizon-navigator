@@ -46,6 +46,7 @@ export const ClubList: FC<ClubListProps> = ({
     triggerOnce: true
   });
 
+  // Auto-scroll to selected club
   useEffect(() => {
     if (selectedClub && selectedClubRef.current && scrollAreaRef.current) {
       setTimeout(() => {
@@ -66,6 +67,7 @@ export const ClubList: FC<ClubListProps> = ({
     }
   }, [selectedClub]);
 
+  // Reset scroll position when club list changes
   useEffect(() => {
     const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     if (scrollContainer) {
@@ -78,7 +80,7 @@ export const ClubList: FC<ClubListProps> = ({
 
   return (
     <div className={cn(
-      "w-full h-full flex flex-col p-1 overflow-hidden bg-background shadow-lg",
+      "w-full h-full flex flex-col p-1 overflow-hidden bg-background shadow-lg rounded-lg",
       styles.clubList
     )}>
       <div className="flex justify-between items-center px-4 py-2 bg-background/50 backdrop-blur-sm">
@@ -105,7 +107,7 @@ export const ClubList: FC<ClubListProps> = ({
       <ScrollArea className="flex-grow" ref={scrollAreaRef}>
         <div className="space-y-2 pr-2" ref={inViewRef}>
           {isLoading ? (
-            <div className="text-foreground/80">Loading venues...</div>
+            <div className="text-foreground/80 p-4">Loading venues...</div>
           ) : (
             clubs.map((club, index) => (
               <div 
