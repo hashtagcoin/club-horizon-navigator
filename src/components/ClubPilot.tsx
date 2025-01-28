@@ -6,11 +6,14 @@ import { useClubData } from '@/hooks/useClubData';
 import { useChatManager } from './chat/ChatManager';
 import { useMapControls } from '@/hooks/useMapControls';
 import { useClubFilters } from '@/hooks/useClubFilters';
+import { useListState } from '@/hooks/useListState';
+import { AnimatedClubList } from './club/AnimatedClubList';
 import { MainLayout } from './layout/MainLayout';
 import { MapSection } from './map/MapSection';
 import { ChatWindow } from './chat/ChatWindow';
 import { useToast } from "@/hooks/use-toast";
 
+// Define the libraries we need for Google Maps
 const libraries: Libraries = ['places', 'geometry'];
 
 export default function ClubPilot() {
@@ -27,6 +30,7 @@ export default function ClubPilot() {
   });
 
   const mapControls = useMapControls(isLoaded, userLocation);
+  const listState = useListState();
 
   const {
     sortBy,
@@ -51,6 +55,7 @@ export default function ClubPilot() {
   const handleVenueAdded = async (venue: any) => {
     await refetch();
     
+    // Create a club object from the venue
     const newClub = {
       id: venue.id,
       name: venue.name,
@@ -59,7 +64,7 @@ export default function ClubPilot() {
         lat: venue.latitude,
         lng: venue.longitude
       },
-      traffic: "Low" as const,
+      traffic: "Low" as const, // Type assertion to match the Club type
       openingHours: {
         Monday: `${venue.monday_hours_open || 'Closed'} - ${venue.monday_hours_close || 'Closed'}`,
         Tuesday: `${venue.tuesday_hours_open || 'Closed'} - ${venue.tuesday_hours_close || 'Closed'}`,
@@ -75,6 +80,7 @@ export default function ClubPilot() {
       isUserAdded: true
     };
 
+    // Select the new club and center the map on it
     mapControls.handleClubSelect(newClub);
     locationManagement.setMapCenter(newClub.position);
     locationManagement.setMapZoom(16);
@@ -106,8 +112,32 @@ export default function ClubPilot() {
       toggleGeneralChat={chatManager.toggleGeneralChat}
       onVenueAdded={handleVenueAdded}
     >
+      <AnimatedClubList
+        x={listState.x}
+        bind={listState.bind}
+        isCollapsed={listState.isListCollapsed}
+        onToggle={listState.toggleList}
+        clubs={filteredClubs}
+        selectedClub={mapControls.selectedClub}
+        selectedDay={selectedDay}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterGenre={filterGenre}
+        setFilterGenre={setFilterGenre}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSelectClub={(club) => {
+          mapControls.handleClubSelect(club);
+          locationManagement.setMapCenter(club.position);
+          locationManagement.setMapZoom(16);
+        }}
+        onOpenChat={chatManager.openChat}
+        newMessageCounts={chatManager.newMessageCounts}
+        isLoading={isLoadingClubs}
+      />
+
       <MapSection
-        isListCollapsed={false}
+        isListCollapsed={listState.isListCollapsed}
         isLoaded={isLoaded}
         filteredClubs={filteredClubs}
         selectedClub={mapControls.selectedClub}

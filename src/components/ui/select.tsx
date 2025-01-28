@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
@@ -81,12 +79,6 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
-      onCloseAutoFocus={(event: Event) => {
-        event.preventDefault();
-        if (event.target instanceof HTMLElement) {
-          event.target.focus({ preventScroll: true });
-        }
-      }}
       {...props}
     >
       <SelectScrollUpButton />
