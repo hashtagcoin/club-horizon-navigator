@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface City {
   id: string;
@@ -24,7 +25,7 @@ export const useCurrentCity = () => {
         .from('Clublist_Australia')
         .select('city, latitude, longitude')
         .eq('city', cityName)
-        .single();
+        .maybeSingle();
 
       if (supabaseError) throw supabaseError;
 
@@ -37,9 +38,14 @@ export const useCurrentCity = () => {
             lng: data.longitude
           }
         });
+        toast.success(`City updated to ${cityName}`);
+      } else {
+        toast.error(`Could not find city: ${cityName}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch city');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch city';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

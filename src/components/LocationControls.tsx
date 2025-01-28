@@ -29,84 +29,93 @@ export function LocationControls({
   const [showGlobalLocationModal, setShowGlobalLocationModal] = useState(false)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [suburbs, setSuburbs] = useState<string[]>([])
-  const { fetchCity } = useCurrentCity()
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const { fetchCity, isLoading: isFetchingCity } = useCurrentCity()
 
   useEffect(() => {
     fetchSuburbs()
   }, [])
 
   const fetchSuburbs = async () => {
-    const { data, error } = await supabase
-      .from('Clublist_Australia')
-      .select('city')
-      .not('city', 'is', null)
-    
-    if (error) {
-      console.error('Error fetching suburbs:', error)
-      return
-    }
+    try {
+      const { data, error } = await supabase
+        .from('Clublist_Australia')
+        .select('city')
+        .not('city', 'is', null)
+      
+      if (error) throw error
 
-    const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
-    setSuburbs(uniqueSuburbs)
-    
-    if (!currentSuburb && uniqueSuburbs.length > 0) {
-      onSuburbChange(uniqueSuburbs[0])
+      const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
+      setSuburbs(uniqueSuburbs)
+      
+      if (!currentSuburb && uniqueSuburbs.length > 0) {
+        onSuburbChange(uniqueSuburbs[0])
+      }
+    } catch (error) {
+      console.error('Error fetching suburbs:', error)
+      toast.error("Failed to load suburbs")
     }
   }
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     setIsLoadingLocation(true)
+    setLocationError(null)
+
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
       setIsLoadingLocation(false)
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyC6Z3hNhhdT0Fqy_AXYl07JBRczMiTg8_0`
-          )
-          const data = await response.json()
-          
-          if (data.results && data.results.length > 0) {
-            const addressComponents = data.results[0].address_components
-            let suburb = '', state = '', country = ''
-            
-            for (const component of addressComponents) {
-              if (component.types.includes('locality') || component.types.includes('sublocality')) {
-                suburb = component.long_name
-              } else if (component.types.includes('administrative_area_level_1')) {
-                state = component.long_name
-              } else if (component.types.includes('country')) {
-                country = component.long_name
-              }
-            }
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+          maximumAge: 0,
+          enableHighAccuracy: true
+        })
+      })
 
-            if (suburb && state && country) {
-              onCountryChange(country)
-              onStateChange(state)
-              onSuburbChange(suburb)
-              fetchCity(suburb)
-              toast.success(`Location updated to ${suburb}`)
-            } else {
-              toast.error("Couldn't determine your exact location")
-            }
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyC6Z3hNhhdT0Fqy_AXYl07JBRczMiTg8_0`
+      )
+      
+      if (!response.ok) throw new Error('Failed to fetch location details')
+      
+      const data = await response.json()
+      
+      if (data.results && data.results.length > 0) {
+        const addressComponents = data.results[0].address_components
+        let suburb = '', state = '', country = ''
+        
+        for (const component of addressComponents) {
+          if (component.types.includes('locality') || component.types.includes('sublocality')) {
+            suburb = component.long_name
+          } else if (component.types.includes('administrative_area_level_1')) {
+            state = component.long_name
+          } else if (component.types.includes('country')) {
+            country = component.long_name
           }
-        } catch (error) {
-          console.error('Error fetching location details:', error)
-          toast.error("Error determining your location")
-        } finally {
-          setIsLoadingLocation(false)
         }
-      },
-      (error) => {
-        console.error('Error getting location:', error)
-        toast.error("Error accessing your location")
-        setIsLoadingLocation(false)
+
+        if (suburb && state && country) {
+          onCountryChange(country)
+          onStateChange(state)
+          onSuburbChange(suburb)
+          await fetchCity(suburb)
+          toast.success(`Location updated to ${suburb}`)
+          setShowLocationModal(false)
+        } else {
+          throw new Error("Couldn't determine your exact location")
+        }
       }
-    )
+    } catch (error) {
+      console.error('Error getting location:', error)
+      setLocationError(error instanceof Error ? error.message : 'Error accessing your location')
+      toast.error(locationError || "Error determining your location")
+    } finally {
+      setIsLoadingLocation(false)
+    }
   }
 
   useEffect(() => {
@@ -124,6 +133,10 @@ export function LocationControls({
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Locating...
                 </div>
+              ) : locationError ? (
+                <div className="flex items-center gap-2 text-red-500">
+                  Error loading location
+                </div>
               ) : (
                 currentSuburb
               )}
@@ -135,10 +148,13 @@ export function LocationControls({
             <DialogTitle>Select Suburb</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Select value={currentSuburb} onValueChange={(value) => {
-              onSuburbChange(value)
-              fetchCity(value)
-            }}>
+            <Select 
+              value={currentSuburb} 
+              onValueChange={(value) => {
+                onSuburbChange(value)
+                fetchCity(value)
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select suburb" />
               </SelectTrigger>
@@ -195,10 +211,13 @@ export function LocationControls({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={currentSuburb} onValueChange={(value) => {
-              onSuburbChange(value)
-              fetchCity(value)
-            }}>
+            <Select 
+              value={currentSuburb} 
+              onValueChange={(value) => {
+                onSuburbChange(value)
+                fetchCity(value)
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select suburb" />
               </SelectTrigger>
