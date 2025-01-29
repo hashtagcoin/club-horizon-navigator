@@ -3,23 +3,20 @@ import { useJsApiLoader, Libraries } from '@react-google-maps/api';
 import { UserProfile } from './user-profile';
 import { useLocationManagement } from '@/hooks/useLocationManagement';
 import { useClubData } from '@/hooks/useClubData';
-import { useChatManager } from './chat/ChatManager';
 import { useMapControls } from '@/hooks/useMapControls';
 import { useClubFilters } from '@/hooks/useClubFilters';
 import { useListState } from '@/hooks/useListState';
+import { useClubChat } from '@/hooks/useClubChat';
+import { useVenueManagement } from '@/hooks/useVenueManagement';
 import { ClubList } from './club/ClubList';
 import { MainLayout } from './layout/MainLayout';
 import { MapSection } from './map/MapSection';
 import { ChatWindow } from './chat/ChatWindow';
-import { useToast } from "@/hooks/use-toast";
 
-// Define the libraries we need for Google Maps
 const libraries: Libraries = ['places', 'geometry'];
 
 export default function ClubPilot() {
-  const [showUserProfile, setShowUserProfile] = useState(false);
-  const [userLocation, setUserLocation] = useState({ lat: -33.8688, lng: 151.2093 });
-  const { toast } = useToast();
+  const [userLocation] = useState({ lat: -33.8688, lng: 151.2093 });
 
   const locationManagement = useLocationManagement();
   const { data: clubs = [], isLoading: isLoadingClubs, refetch } = useClubData();
@@ -31,6 +28,8 @@ export default function ClubPilot() {
 
   const mapControls = useMapControls(isLoaded, userLocation);
   const listState = useListState();
+  const { chatManager, showUserProfile, setShowUserProfile } = useClubChat(mapControls.selectedClub);
+  const { handleVenueAdded: baseHandleVenueAdded } = useVenueManagement(refetch);
 
   const {
     sortBy,
@@ -50,43 +49,11 @@ export default function ClubPilot() {
     filterAndSortClubs
   } = useClubFilters();
 
-  const chatManager = useChatManager(mapControls.selectedClub);
-
   const handleVenueAdded = async (venue: any) => {
-    await refetch();
-    
-    const newClub = {
-      id: venue.id,
-      name: venue.name,
-      address: venue.address,
-      position: {
-        lat: venue.latitude,
-        lng: venue.longitude
-      },
-      traffic: "Low" as const,
-      openingHours: {
-        Monday: `${venue.monday_hours_open || 'Closed'} - ${venue.monday_hours_close || 'Closed'}`,
-        Tuesday: `${venue.tuesday_hours_open || 'Closed'} - ${venue.tuesday_hours_close || 'Closed'}`,
-        Wednesday: `${venue.wednesday_hours_open || 'Closed'} - ${venue.wednesday_hours_close || 'Closed'}`,
-        Thursday: `${venue.thursday_hours_open || 'Closed'} - ${venue.thursday_hours_close || 'Closed'}`,
-        Friday: `${venue.friday_hours_open || 'Closed'} - ${venue.friday_hours_close || 'Closed'}`,
-        Saturday: `${venue.saturday_hours_open || 'Closed'} - ${venue.saturday_hours_close || 'Closed'}`,
-        Sunday: `${venue.sunday_hours_open || 'Closed'} - ${venue.sunday_hours_close || 'Closed'}`
-      },
-      genre: venue[`${selectedDay.toLowerCase()}_genre`] || 'Various',
-      usersAtClub: 0,
-      hasSpecial: false,
-      isUserAdded: true
-    };
-
+    const newClub = await baseHandleVenueAdded(venue);
     mapControls.handleClubSelect(newClub);
     locationManagement.setMapCenter(newClub.position);
     locationManagement.setMapZoom(16);
-
-    toast({
-      title: "New Venue Added",
-      description: `${venue.name} has been added to the map`
-    });
   };
 
   if (showUserProfile) {
