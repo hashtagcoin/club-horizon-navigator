@@ -29,8 +29,7 @@ export default function ClubPilot() {
   const mapControls = useMapControls(isLoaded, userLocation);
   const listState = useListState();
   const { chatManager, showUserProfile, setShowUserProfile } = useClubChat(mapControls.selectedClub);
-  const { handleVenueAdded: baseHandleVenueAdded } = useVenueManagement(refetch);
-
+  
   const {
     sortBy,
     setSortBy,
@@ -48,6 +47,8 @@ export default function ClubPilot() {
     setSelectedDay,
     filterAndSortClubs
   } = useClubFilters();
+
+  const { handleVenueAdded: baseHandleVenueAdded } = useVenueManagement(refetch, selectedDay);
 
   const handleVenueAdded = async (venue: any) => {
     const newClub = await baseHandleVenueAdded(venue);

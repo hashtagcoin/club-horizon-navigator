@@ -1,7 +1,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { Club } from '@/types/club';
 
-export const useVenueManagement = (refetch: () => Promise<any>) => {
+export const useVenueManagement = (refetch: () => Promise<any>, selectedDay: string) => {
   const { toast } = useToast();
 
   const handleVenueAdded = async (venue: any) => {
