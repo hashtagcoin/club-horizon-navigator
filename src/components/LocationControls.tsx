@@ -37,8 +37,8 @@ export function LocationControls({
     try {
       const { data, error } = await supabase
         .from('Clublist_Australia')
-        .select('area')
-        .not('area', 'is', null)
+        .select('city')
+        .not('city', 'is', null)
       
       if (error) {
         console.error('Error fetching suburbs:', error)
@@ -46,15 +46,18 @@ export function LocationControls({
       }
 
       // Extract unique suburbs and remove nulls
-      const uniqueSuburbs = Array.from(new Set(data.map(item => item.area).filter(Boolean)))
+      const uniqueSuburbs = Array.from(new Set(data.map(item => item.city).filter(Boolean)))
       setSuburbs(uniqueSuburbs)
       
-      // If no suburb is selected and we have suburbs, select the first one
-      if (!currentSuburb && uniqueSuburbs.length > 0) {
-        onSuburbChange(uniqueSuburbs[0])
+      // If no suburb is selected and we have suburbs, select Sydney as default
+      if (!currentSuburb) {
+        const defaultSuburb = uniqueSuburbs.includes('Sydney') ? 'Sydney' : uniqueSuburbs[0]
+        onSuburbChange(defaultSuburb)
       }
     } catch (error) {
       console.error('Error processing suburbs:', error)
+      // Set Sydney as default if there's an error
+      onSuburbChange('Sydney')
     }
   }
 
@@ -63,6 +66,7 @@ export function LocationControls({
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser")
       setIsLoadingLocation(false)
+      setDefaultLocation()
       return
     }
 
@@ -96,22 +100,31 @@ export function LocationControls({
               onSuburbChange(suburb)
               toast.success(`Location updated to ${suburb}`)
             } else {
-              toast.error("Couldn't determine your exact location")
+              setDefaultLocation()
             }
+          } else {
+            setDefaultLocation()
           }
         } catch (error) {
           console.error('Error fetching location details:', error)
-          toast.error("Error determining your location")
+          setDefaultLocation()
         } finally {
           setIsLoadingLocation(false)
         }
       },
       (error) => {
         console.error('Error getting location:', error)
-        toast.error("Error accessing your location")
+        setDefaultLocation()
         setIsLoadingLocation(false)
       }
     )
+  }
+
+  const setDefaultLocation = () => {
+    onCountryChange('Australia')
+    onStateChange('New South Wales')
+    onSuburbChange('Sydney')
+    toast.info("Using Sydney as default location")
   }
 
   useEffect(() => {
