@@ -1,5 +1,5 @@
 import { Club } from '@/types/club';
-import { MapView } from './MapView';
+import { MapContainer } from './MapContainer';
 
 interface MapSectionProps {
   isListCollapsed: boolean;
@@ -21,14 +21,10 @@ export const MapSection = ({
   isLoaded,
   filteredClubs,
   selectedClub,
-  selectedDay,
-  setSelectedDay,
   mapCenter,
   mapZoom,
   userLocation,
-  directions,
   onClubSelect,
-  locationManagement,
 }: MapSectionProps) => {
   return (
     <div 
@@ -36,18 +32,14 @@ export const MapSection = ({
         isListCollapsed ? 'w-full ml-0' : 'w-1/2 ml-[50%]'
       }`}
     >
-      <MapView
+      <MapContainer
         isLoaded={isLoaded}
         clubs={filteredClubs}
         selectedClub={selectedClub}
-        selectedDay={selectedDay}
-        setSelectedDay={setSelectedDay}
         mapCenter={mapCenter}
         mapZoom={mapZoom}
         userLocation={userLocation}
-        directions={directions}
         onClubSelect={onClubSelect}
-        locationManagement={locationManagement}
       />
     </div>
   );

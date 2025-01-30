@@ -48,3 +48,24 @@ export const layoutStyles = {
   main: 'flex flex-col h-screen bg-gray-100 text-sm',
   content: 'flex-1 relative overflow-hidden',
 };
+// Add new map component specific styles
+export const mapComponentStyles = {
+  container: 'h-full relative pb-14',
+  controls: 'absolute z-50 flex items-center gap-2 bg-white/90 p-2 rounded-lg shadow-md',
+  mapWrapper: 'w-full h-full touch-none',
+};
+
+// Add chat component specific styles
+export const chatComponentStyles = {
+  container: 'flex flex-col h-full',
+  header: 'p-2 bg-black text-white border-y border-white/10',
+  messageList: 'flex-1 p-2 bg-black',
+  inputArea: 'p-2 border-t border-white/10 bg-black',
+};
+
+// Add list component specific styles
+export const listComponentStyles = {
+  container: 'w-full h-full flex flex-col p-1 overflow-hidden bg-white shadow-lg',
+  header: 'flex justify-between items-center px-4 py-2 bg-gray-50',
+  content: 'space-y-2 pr-2',
+};
