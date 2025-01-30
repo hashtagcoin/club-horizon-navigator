@@ -58,6 +58,9 @@ export const MapContainer: FC<MapContainerProps> = ({
         userLocation={userLocation}
         onClubSelect={onClubSelect}
         mapStyles={mapStyles}
+        isLoaded={true}
+        directions={null}
+        calculatedBounds={null}
       />
     </div>
   );
