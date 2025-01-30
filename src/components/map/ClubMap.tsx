@@ -12,7 +12,7 @@ interface ClubMapProps {
   directions: google.maps.DirectionsResult | null;
   onClubSelect: (club: Club) => void;
   calculatedBounds: google.maps.LatLngBounds | null;
-  mapStyles?: google.maps.MapTypeStyle[];
+  mapStyles: google.maps.MapTypeStyle[];
 }
 
 export const ClubMap = ({
@@ -25,7 +25,7 @@ export const ClubMap = ({
   directions,
   onClubSelect,
   calculatedBounds,
-  mapStyles = []
+  mapStyles
 }: ClubMapProps) => {
   const [directionsResult, setDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
   const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
