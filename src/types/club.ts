@@ -32,6 +32,10 @@ export interface ChatMessage {
   mediaType?: 'image' | 'video';
 }
 
+export interface ChatMessages {
+  [key: string | number]: ChatMessage[];
+}
+
 export interface MapState {
   center: Position;
   zoom: number;
@@ -42,4 +46,13 @@ export interface ChatState {
   isOpen: boolean;
   messages: ChatMessage[];
   activeClub: Club | null;
+}
+
+export interface Event {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  clubId: number;
+  image?: string;
 }

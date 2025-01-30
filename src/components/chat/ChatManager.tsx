@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Club, ChatMessage, ChatMessages } from '@/types/club';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useChatManager(selectedClub: Club | null) {
   const [chatOpen, setChatOpen] = useState(false);
@@ -9,6 +10,14 @@ export function useChatManager(selectedClub: Club | null) {
   const [newMessageCounts, setNewMessageCounts] = useState<Record<number, number>>({});
   const [isGeneralChat, setIsGeneralChat] = useState(true);
   const [activeClubChat, setActiveClubChat] = useState<Club | null>(null);
+
+  const createMessage = (text: string, chatId: string | number): ChatMessage => ({
+    id: uuidv4(),
+    sender: "You",
+    text,
+    timestamp: Date.now(),
+    clubId: chatId
+  });
 
   const toggleGeneralChat = () => {
     setChatOpen(prev => !prev);
@@ -37,12 +46,7 @@ export function useChatManager(selectedClub: Club | null) {
   const sendMessage = (clubId?: number) => {
     if (chatMessage.trim() !== "") {
       const chatId = clubId || (isGeneralChat ? 'general' : (activeClubChat?.id || 'general'));
-      const newMessage: ChatMessage = {
-        sender: "You",
-        text: chatMessage,
-        timestamp: Date.now(),
-        clubId: chatId
-      };
+      const newMessage = createMessage(chatMessage, chatId);
 
       setChatMessages(prev => ({
         ...prev,
@@ -60,12 +64,11 @@ export function useChatManager(selectedClub: Club | null) {
           "Anyone heading to the club district later?"
         ];
         
-        const responseMessage: ChatMessage = {
-          sender: users[Math.floor(Math.random() * users.length)],
-          text: responses[Math.floor(Math.random() * responses.length)],
-          timestamp: Date.now(),
-          clubId: chatId
-        };
+        const responseMessage = createMessage(
+          responses[Math.floor(Math.random() * responses.length)],
+          chatId
+        );
+        responseMessage.sender = users[Math.floor(Math.random() * users.length)];
 
         setChatMessages(prev => ({
           ...prev,
