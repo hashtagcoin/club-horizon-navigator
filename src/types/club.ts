@@ -51,8 +51,9 @@ export interface ChatState {
 export interface Event {
   id: number;
   title: string;
+  image: string;
   description: string;
   date: string;
-  clubId: number;
-  image?: string;
+  price: string;
+  clubId?: number; // Made optional since existing data doesn't include it
 }
