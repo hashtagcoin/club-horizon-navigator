@@ -3,20 +3,25 @@ import { useJsApiLoader, Libraries } from '@react-google-maps/api';
 import { UserProfile } from './user-profile';
 import { useLocationManagement } from '@/hooks/useLocationManagement';
 import { useClubData } from '@/hooks/useClubData';
-import { useMapControls } from '@/hooks/useMapControls';
 import { useClubFilters } from '@/hooks/useClubFilters';
 import { useListState } from '@/hooks/useListState';
 import { useClubChat } from '@/hooks/useClubChat';
 import { useVenueManagement } from '@/hooks/useVenueManagement';
 import { ClubList } from './club/ClubList';
 import { MainLayout } from './layout/MainLayout';
-import { MapSection } from './map/MapSection';
-import { ChatWindow } from './chat/ChatWindow';
+import { MapContainer } from './map/MapContainer';
+import { ChatInterface } from './chat/ChatInterface';
+import { MapState, Club } from '@/types/club';
 
 const libraries: Libraries = ['places', 'geometry'];
 
 export default function ClubPilot() {
   const [userLocation] = useState({ lat: -33.8688, lng: 151.2093 });
+  const [mapState, setMapState] = useState<MapState>({
+    center: userLocation,
+    zoom: 14,
+    selectedClub: null
+  });
 
   const locationManagement = useLocationManagement();
   const { data: clubs = [], isLoading: isLoadingClubs, refetch } = useClubData();
@@ -26,9 +31,8 @@ export default function ClubPilot() {
     libraries
   });
 
-  const mapControls = useMapControls(isLoaded, userLocation);
   const listState = useListState();
-  const { chatManager, showUserProfile, setShowUserProfile } = useClubChat(mapControls.selectedClub);
+  const { chatManager, showUserProfile, setShowUserProfile } = useClubChat(mapState.selectedClub);
   
   const {
     sortBy,
@@ -48,13 +52,15 @@ export default function ClubPilot() {
     filterAndSortClubs
   } = useClubFilters();
 
-  const { handleVenueAdded: baseHandleVenueAdded } = useVenueManagement(refetch, selectedDay);
+  const { handleVenueAdded } = useVenueManagement(refetch, selectedDay);
 
-  const handleVenueAdded = async (venue: any) => {
-    const newClub = await baseHandleVenueAdded(venue);
-    mapControls.handleClubSelect(newClub);
-    locationManagement.setMapCenter(newClub.position);
-    locationManagement.setMapZoom(16);
+  const handleClubSelect = (club: Club) => {
+    setMapState(prev => ({
+      ...prev,
+      selectedClub: club,
+      center: club.position,
+      zoom: 16
+    }));
   };
 
   if (showUserProfile) {
@@ -84,7 +90,7 @@ export default function ClubPilot() {
         isCollapsed={listState.isListCollapsed}
         onToggle={listState.toggleList}
         clubs={filteredClubs}
-        selectedClub={mapControls.selectedClub}
+        selectedClub={mapState.selectedClub}
         selectedDay={selectedDay}
         sortBy={sortBy}
         setSortBy={setSortBy}
@@ -92,66 +98,33 @@ export default function ClubPilot() {
         setFilterGenre={setFilterGenre}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onSelectClub={(club) => {
-          mapControls.handleClubSelect(club);
-          locationManagement.setMapCenter(club.position);
-          locationManagement.setMapZoom(16);
-        }}
+        onSelectClub={handleClubSelect}
         onOpenChat={chatManager.openChat}
         newMessageCounts={chatManager.newMessageCounts}
         isLoading={isLoadingClubs}
       />
 
-      <MapSection
-        isListCollapsed={listState.isListCollapsed}
-        isLoaded={isLoaded}
-        filteredClubs={filteredClubs}
-        selectedClub={mapControls.selectedClub}
-        selectedDay={selectedDay}
-        setSelectedDay={setSelectedDay}
-        mapCenter={locationManagement.mapCenter}
-        mapZoom={locationManagement.mapZoom}
-        userLocation={userLocation}
-        directions={mapControls.directions}
-        onClubSelect={(club) => {
-          mapControls.handleClubSelect(club);
-          locationManagement.setMapCenter(club.position);
-          locationManagement.setMapZoom(16);
-        }}
-        locationManagement={locationManagement}
-      />
+      <div className={`transition-all duration-300 ease-in-out h-[75vh] ${
+        listState.isListCollapsed ? 'w-full ml-0' : 'w-1/2 ml-[50%]'
+      }`}>
+        <MapContainer
+          clubs={filteredClubs}
+          mapState={mapState}
+          userLocation={userLocation}
+          onClubSelect={handleClubSelect}
+          onMapStateChange={(changes) => setMapState(prev => ({ ...prev, ...changes }))}
+        />
+      </div>
 
       {chatManager.chatOpen && (
-        <ChatWindow
-          isGeneralChat={chatManager.isGeneralChat}
-          chatClub={chatManager.activeClubChat}
-          chatMessage={chatManager.chatMessage}
-          setChatMessage={chatManager.setChatMessage}
-          allMessages={chatManager.allMessages}
+        <ChatInterface
+          club={chatManager.activeClubChat}
+          messages={chatManager.allMessages}
+          inputMessage={chatManager.chatMessage}
+          onMessageChange={chatManager.setChatMessage}
+          onSendMessage={() => chatManager.sendMessage(chatManager.activeClubChat?.id)}
           onClose={() => chatManager.setChatOpen(false)}
-          onSend={chatManager.sendMessage}
-          clubs={clubs}
-          messageOpacities={{}}
-          chatScrollRef={null}
         />
-      )}
-
-      {clubs.map((club) => 
-        chatManager.clubChats[club.id] && (
-          <ChatWindow
-            key={club.id}
-            isGeneralChat={false}
-            chatClub={club}
-            chatMessage={chatManager.chatMessage}
-            setChatMessage={chatManager.setChatMessage}
-            allMessages={chatManager.getClubMessages(club.id)}
-            onClose={() => chatManager.closeChat(club)}
-            onSend={() => chatManager.sendMessage(club.id)}
-            clubs={clubs}
-            messageOpacities={{}}
-            chatScrollRef={null}
-          />
-        )
       )}
     </MainLayout>
   );
