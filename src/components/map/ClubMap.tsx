@@ -31,8 +31,12 @@ export const ClubMap = ({
   const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
 
   useEffect(() => {
-    if (isLoaded && (clubs.length > 0 || userLocation)) {
-      const newBounds = new google.maps.LatLngBounds();
+    if (!isLoaded || !window.google) {
+      return;
+    }
+
+    if (clubs.length > 0 || userLocation) {
+      const newBounds = new window.google.maps.LatLngBounds();
       
       clubs.forEach(club => {
         newBounds.extend(club.position);
@@ -42,50 +46,50 @@ export const ClubMap = ({
         newBounds.extend(userLocation);
       }
       
-      const padding = { top: 100, right: 50, bottom: 50, left: 400 };
-      const ne = newBounds.getNorthEast();
-      const sw = newBounds.getSouthWest();
+      const latPadding = (newBounds.getNorthEast().lat() - newBounds.getSouthWest().lat()) * 0.1;
+      const lngPadding = (newBounds.getNorthEast().lng() - newBounds.getSouthWest().lng()) * 0.1;
       
-      const latPadding = (ne.lat() - sw.lat()) * 0.1;
-      const lngPadding = (ne.lng() - sw.lng()) * 0.1;
-      
-      newBounds.extend(new google.maps.LatLng(
-        ne.lat() + latPadding,
-        ne.lng() + lngPadding
-      ));
-      newBounds.extend(new google.maps.LatLng(
-        sw.lat() - latPadding,
-        sw.lng() - lngPadding
-      ));
+      newBounds.extend({
+        lat: newBounds.getNorthEast().lat() + latPadding,
+        lng: newBounds.getNorthEast().lng() + lngPadding
+      });
+      newBounds.extend({
+        lat: newBounds.getSouthWest().lat() - latPadding,
+        lng: newBounds.getSouthWest().lng() - lngPadding
+      });
       
       setBounds(newBounds);
     }
   }, [isLoaded, clubs, userLocation]);
 
   useEffect(() => {
-    if (isLoaded && userLocation && selectedClub) {
-      const directionsService = new google.maps.DirectionsService();
-
-      directionsService.route(
-        {
-          origin: userLocation,
-          destination: selectedClub.position,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            setDirectionsResult(result);
-          } else {
-            console.error(`Error fetching directions: ${status}`);
-          }
-        }
-      );
+    if (!isLoaded || !window.google || !userLocation || !selectedClub) {
+      return;
     }
+
+    const directionsService = new window.google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: userLocation,
+        destination: selectedClub.position,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          setDirectionsResult(result);
+        } else {
+          console.error(`Error fetching directions: ${status}`);
+        }
+      }
+    );
   }, [isLoaded, userLocation, selectedClub]);
 
-  if (!isLoaded) return <div>Loading map...</div>;
+  if (!isLoaded || !window.google) {
+    return <div className="w-full h-full flex items-center justify-center">Loading map...</div>;
+  }
 
-  const mapOptions = {
+  const mapOptions: google.maps.MapOptions = {
     disableDefaultUI: true,
     zoomControl: true,
     gestureHandling: 'greedy',
@@ -112,7 +116,7 @@ export const ClubMap = ({
           position={club.position}
           onClick={() => onClubSelect(club)}
           icon={club.position.lat === mapCenter.lat && club.position.lng === mapCenter.lng ? {
-            path: google.maps.SymbolPath.CIRCLE,
+            path: window.google.maps.SymbolPath.CIRCLE,
             scale: 10,
             fillColor: '#FFD700',
             fillOpacity: 1,
@@ -126,7 +130,7 @@ export const ClubMap = ({
         <Marker
           position={userLocation}
           icon={{
-            path: google.maps.SymbolPath.CIRCLE,
+            path: window.google.maps.SymbolPath.CIRCLE,
             scale: 8,
             fillColor: '#4285F4',
             fillOpacity: 1,
