@@ -9,6 +9,7 @@ interface MapContainerProps {
   userLocation: google.maps.LatLngLiteral;
   onClubSelect: (club: Club) => void;
   onMapStateChange: (state: Partial<MapState>) => void;
+  isLoaded: boolean;
 }
 
 export const MapContainer: FC<MapContainerProps> = ({
@@ -17,6 +18,7 @@ export const MapContainer: FC<MapContainerProps> = ({
   userLocation,
   onClubSelect,
   onMapStateChange,
+  isLoaded,
 }) => {
   return (
     <div className="h-full w-full relative">
@@ -28,7 +30,7 @@ export const MapContainer: FC<MapContainerProps> = ({
         userLocation={userLocation}
         onClubSelect={onClubSelect}
         mapStyles={darkMapStyles}
-        isLoaded={true}
+        isLoaded={isLoaded}
         directions={null}
         calculatedBounds={null}
       />

@@ -31,12 +31,10 @@ export const ClubMap = ({
   const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
 
   useEffect(() => {
-    if (!isLoaded || !window.google) {
-      return;
-    }
+    if (!isLoaded) return;
 
     if (clubs.length > 0 || userLocation) {
-      const newBounds = new window.google.maps.LatLngBounds();
+      const newBounds = new google.maps.LatLngBounds();
       
       clubs.forEach(club => {
         newBounds.extend(club.position);
@@ -63,20 +61,18 @@ export const ClubMap = ({
   }, [isLoaded, clubs, userLocation]);
 
   useEffect(() => {
-    if (!isLoaded || !window.google || !userLocation || !selectedClub) {
-      return;
-    }
+    if (!isLoaded || !userLocation || !selectedClub) return;
 
-    const directionsService = new window.google.maps.DirectionsService();
+    const directionsService = new google.maps.DirectionsService();
 
     directionsService.route(
       {
         origin: userLocation,
         destination: selectedClub.position,
-        travelMode: window.google.maps.TravelMode.DRIVING,
+        travelMode: google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK) {
+        if (status === google.maps.DirectionsStatus.OK) {
           setDirectionsResult(result);
         } else {
           console.error(`Error fetching directions: ${status}`);
@@ -85,7 +81,7 @@ export const ClubMap = ({
     );
   }, [isLoaded, userLocation, selectedClub]);
 
-  if (!isLoaded || !window.google) {
+  if (!isLoaded) {
     return <div className="w-full h-full flex items-center justify-center">Loading map...</div>;
   }
 
@@ -116,7 +112,7 @@ export const ClubMap = ({
           position={club.position}
           onClick={() => onClubSelect(club)}
           icon={club.position.lat === mapCenter.lat && club.position.lng === mapCenter.lng ? {
-            path: window.google.maps.SymbolPath.CIRCLE,
+            path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
             fillColor: '#FFD700',
             fillOpacity: 1,
@@ -130,7 +126,7 @@ export const ClubMap = ({
         <Marker
           position={userLocation}
           icon={{
-            path: window.google.maps.SymbolPath.CIRCLE,
+            path: google.maps.SymbolPath.CIRCLE,
             scale: 8,
             fillColor: '#4285F4',
             fillOpacity: 1,
