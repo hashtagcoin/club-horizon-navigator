@@ -1,9 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { Club } from '@/types/club';
-import { useState, useEffect } from 'react';
+import { darkMapStyles } from '@/utils/mapStyles';
 
-export interface ClubMapProps {
-  isLoaded: boolean;
+interface ClubMapProps {
   clubs: Club[];
   selectedClub: Club | null;
   mapCenter: google.maps.LatLngLiteral;
@@ -12,12 +12,12 @@ export interface ClubMapProps {
   directions: google.maps.DirectionsResult | null;
   onClubSelect: (club: Club) => void;
   calculatedBounds: google.maps.LatLngBounds | null;
-  mapStyles: google.maps.MapTypeStyle[];
+  mapStyles?: google.maps.MapTypeStyle[];
+  isLoaded: boolean;
 }
 
 export const ClubMap = ({
-  isLoaded,
-  clubs = [],
+  clubs,
   selectedClub,
   mapCenter,
   mapZoom,
@@ -25,130 +25,83 @@ export const ClubMap = ({
   directions,
   onClubSelect,
   calculatedBounds,
-  mapStyles
+  mapStyles = darkMapStyles,
+  isLoaded
 }: ClubMapProps) => {
-  const [directionsResult, setDirectionsResult] = useState<google.maps.DirectionsResult | null>(null);
-  const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (clubs.length > 0 || userLocation) {
-      const newBounds = new google.maps.LatLngBounds();
-      
-      clubs.forEach(club => {
-        newBounds.extend(club.position);
-      });
-      
-      if (userLocation) {
-        newBounds.extend(userLocation);
-      }
-      
-      const latPadding = (newBounds.getNorthEast().lat() - newBounds.getSouthWest().lat()) * 0.1;
-      const lngPadding = (newBounds.getNorthEast().lng() - newBounds.getSouthWest().lng()) * 0.1;
-      
-      newBounds.extend({
-        lat: newBounds.getNorthEast().lat() + latPadding,
-        lng: newBounds.getNorthEast().lng() + lngPadding
-      });
-      newBounds.extend({
-        lat: newBounds.getSouthWest().lat() - latPadding,
-        lng: newBounds.getSouthWest().lng() - lngPadding
-      });
-      
-      setBounds(newBounds);
+    if (map && calculatedBounds) {
+      map.fitBounds(calculatedBounds);
     }
-  }, [isLoaded, clubs, userLocation]);
-
-  useEffect(() => {
-    if (!isLoaded || !userLocation || !selectedClub) return;
-
-    const directionsService = new google.maps.DirectionsService();
-
-    directionsService.route(
-      {
-        origin: userLocation,
-        destination: selectedClub.position,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          setDirectionsResult(result);
-        } else {
-          console.error(`Error fetching directions: ${status}`);
-        }
-      }
-    );
-  }, [isLoaded, userLocation, selectedClub]);
+  }, [calculatedBounds, map]);
 
   if (!isLoaded) {
-    return <div className="w-full h-full flex items-center justify-center">Loading map...</div>;
+    return <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <p className="text-gray-600">Loading map...</p>
+    </div>;
   }
 
-  const mapOptions: google.maps.MapOptions = {
-    disableDefaultUI: true,
-    zoomControl: true,
-    gestureHandling: 'greedy',
-    streetViewControl: false,
-    mapTypeControl: false,
-    styles: mapStyles,
+  const onLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
+    setMap(map);
+  };
+
+  const onUnmount = () => {
+    mapRef.current = null;
+    setMap(null);
   };
 
   return (
-    <GoogleMap
-      mapContainerStyle={{ width: '100%', height: '100%', touchAction: 'none' }}
-      center={mapCenter}
-      zoom={mapZoom}
-      options={mapOptions}
-      onLoad={map => {
-        if (bounds) {
-          map.fitBounds(bounds);
-        }
-      }}
-    >
-      {clubs?.map((club) => (
-        <Marker
-          key={club.id}
-          position={club.position}
-          onClick={() => onClubSelect(club)}
-          icon={club.position.lat === mapCenter.lat && club.position.lng === mapCenter.lng ? {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#FFD700',
-            fillOpacity: 1,
-            strokeColor: '#000000',
-            strokeWeight: 2,
-          } : undefined}
-        />
-      ))}
+    <div className="w-full h-full touch-none">
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={mapCenter}
+        zoom={mapZoom}
+        options={{
+          styles: mapStyles,
+          disableDefaultUI: true,
+          zoomControl: true,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        }}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+      >
+        {clubs.map((club) => (
+          <Marker
+            key={club.id}
+            position={club.position}
+            onClick={() => onClubSelect(club)}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: selectedClub?.id === club.id ? '#000000' : '#FFFFFF',
+              fillOpacity: 1,
+              strokeWeight: 1,
+              strokeColor: '#000000',
+            }}
+          />
+        ))}
 
-      {userLocation && (
-        <Marker
-          position={userLocation}
-          icon={{
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          }}
-        />
-      )}
+        {userLocation && (
+          <Marker
+            position={userLocation}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#4CAF50',
+              fillOpacity: 1,
+              strokeWeight: 1,
+              strokeColor: '#000000',
+            }}
+          />
+        )}
 
-      {directionsResult && (
-        <DirectionsRenderer
-          directions={directionsResult}
-          options={{
-            suppressMarkers: true,
-            polylineOptions: {
-              strokeColor: "#4285F4",
-              strokeOpacity: 0.8,
-              strokeWeight: 4,
-            },
-          }}
-        />
-      )}
-    </GoogleMap>
+        {directions && <DirectionsRenderer directions={directions} />}
+      </GoogleMap>
+    </div>
   );
 };
