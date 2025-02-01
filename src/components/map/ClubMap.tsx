@@ -2,7 +2,7 @@ import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { Club } from '@/types/club';
 import { useState, useEffect } from 'react';
 
-interface ClubMapProps {
+export interface ClubMapProps {
   isLoaded: boolean;
   clubs: Club[];
   selectedClub: Club | null;

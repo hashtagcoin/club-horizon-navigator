@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { Club, MapState } from '@/types/club';
 import { ClubMap } from './ClubMap';
+import { darkMapStyles } from '@/utils/mapStyles';
 
 interface MapContainerProps {
   clubs: Club[];
@@ -17,37 +18,6 @@ export const MapContainer: FC<MapContainerProps> = ({
   onClubSelect,
   onMapStateChange,
 }) => {
-  const mapStyles: google.maps.MapTypeStyle[] = [
-    {
-      featureType: "all",
-      elementType: "geometry",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.stroke",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.fill",
-      stylers: [{ color: "#746855" }]
-    },
-    {
-      featureType: "administrative.locality",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#d59563" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#38414e" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#17263c" }],
-    },
-  ];
-
   return (
     <div className="h-full w-full relative">
       <ClubMap
@@ -57,7 +27,7 @@ export const MapContainer: FC<MapContainerProps> = ({
         mapZoom={mapState.zoom}
         userLocation={userLocation}
         onClubSelect={onClubSelect}
-        mapStyles={mapStyles}
+        mapStyles={darkMapStyles}
         isLoaded={true}
         directions={null}
         calculatedBounds={null}

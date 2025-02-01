@@ -6,6 +6,7 @@ import { ClubDetailsPanel } from '../club/ClubDetailsPanel';
 import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { darkMapStyles } from '@/utils/mapStyles';
 
 interface MapViewProps {
   isLoaded: boolean;
@@ -25,8 +26,8 @@ export function MapView({
   isLoaded,
   clubs,
   selectedClub,
-  selectedDay: listSelectedDay,
-  setSelectedDay: setListSelectedDay,
+  selectedDay,
+  setSelectedDay,
   mapCenter,
   mapZoom,
   userLocation,
@@ -34,42 +35,10 @@ export function MapView({
   onClubSelect,
   locationManagement,
 }: MapViewProps) {
-  const [detailsSelectedDay, setDetailsSelectedDay] = useState(listSelectedDay);
   const [showAllClubs, setShowAllClubs] = useState(false);
   const isMobile = useIsMobile();
 
   const visibleClubs = showAllClubs ? clubs : (selectedClub ? [selectedClub] : []);
-
-  const mapStyles: google.maps.MapTypeStyle[] = [
-    {
-      featureType: "all",
-      elementType: "geometry",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.stroke",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.fill",
-      stylers: [{ color: "#746855" }]
-    },
-    {
-      featureType: "administrative.locality",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#d59563" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#38414e" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#17263c" }],
-    },
-  ];
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden relative z-0">
@@ -77,8 +46,8 @@ export function MapView({
         <LocationModals {...locationManagement} />
         <ClubDetailsPanel
           selectedClub={selectedClub}
-          selectedDay={detailsSelectedDay}
-          setSelectedDay={setDetailsSelectedDay}
+          selectedDay={selectedDay}
+          setSelectedDay={setSelectedDay}
         />
       </div>
       
@@ -108,7 +77,7 @@ export function MapView({
           directions={directions}
           onClubSelect={onClubSelect}
           calculatedBounds={null}
-          mapStyles={mapStyles}
+          mapStyles={darkMapStyles}
         />
       </div>
     </div>

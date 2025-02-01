@@ -4,6 +4,7 @@ import { ClubMap } from './ClubMap';
 import { ChatWindow } from '../chat/ChatWindow';
 import { LocationModals } from '../location/LocationModals';
 import { ClubDetailsPanel } from '../club/ClubDetailsPanel';
+import { darkMapStyles } from '@/utils/mapStyles';
 
 interface MapColumnProps {
   isLoaded: boolean;
@@ -34,37 +35,6 @@ export const MapColumn: FC<MapColumnProps> = ({
   locationManagement,
   chatManager
 }) => {
-  const mapStyles: google.maps.MapTypeStyle[] = [
-    {
-      featureType: "all",
-      elementType: "geometry",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.stroke",
-      stylers: [{ color: "#242f3e" }]
-    },
-    {
-      featureType: "labels.text.fill",
-      stylers: [{ color: "#746855" }]
-    },
-    {
-      featureType: "administrative.locality",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#d59563" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#38414e" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#17263c" }],
-    },
-  ];
-
   return (
     <div className="h-full flex flex-col overflow-hidden relative z-0">
       <div className="absolute top-2 right-2 z-50 flex flex-col items-end space-y-2">
@@ -87,7 +57,7 @@ export const MapColumn: FC<MapColumnProps> = ({
           directions={directions}
           onClubSelect={onClubSelect}
           calculatedBounds={null}
-          mapStyles={mapStyles}
+          mapStyles={darkMapStyles}
         />
       </div>
 
