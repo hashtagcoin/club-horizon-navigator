@@ -67,6 +67,10 @@ export default function ClubPilot() {
     return <UserProfile onClose={() => setShowUserProfile(false)} />;
   }
 
+  if (!isLoaded) {
+    return <div className="flex items-center justify-center h-screen">Loading Maps...</div>;
+  }
+
   const filteredClubs = filterAndSortClubs(clubs, userLocation);
 
   return (
@@ -113,6 +117,7 @@ export default function ClubPilot() {
           userLocation={userLocation}
           onClubSelect={handleClubSelect}
           onMapStateChange={(changes) => setMapState(prev => ({ ...prev, ...changes }))}
+          isLoaded={isLoaded}
         />
       </div>
 
